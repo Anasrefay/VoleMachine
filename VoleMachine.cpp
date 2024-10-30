@@ -43,21 +43,21 @@ using namespace std;
 
 class Memory
 {
-    vector<string> memory;
+    vector<string> bytes;
 
 public:
     Memory()
     {
         for (int i = 0; i < 256; i++)
         {
-            memory.push_back("00");
+            bytes.push_back("00");
         }
     }
     void set_momery(vector<string> s, int n)
     {
         for (int i = 0; i < n; i++)
         {
-            memory[i] = s[i];
+            bytes[i] = s[i];
         }
     }
     void get_momery()
@@ -72,7 +72,7 @@ public:
                 cout << mp[i] << ' ';
                 for (int j = 0 + 16 * i; j < 16 + 16 * i; j++)
                 {
-                    cout << memory[j] << ' ';
+                    cout << bytes[j] << ' ';
                 }
                 cout<<'\n';
             }
@@ -81,7 +81,7 @@ public:
                 cout << i << ' ';
                 for (int j = 0 + 16 * i; j < 16 + 16 * i; j++)
                 {
-                    cout << memory[j] << ' ';
+                    cout << bytes[j] << ' ';
                 }
                 cout<<'\n';
             }
