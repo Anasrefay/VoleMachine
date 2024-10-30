@@ -17,8 +17,8 @@ private:
   vector<string> bytes;
 public: 
   Memory(); 
-  void set_momery(vector<string> s, int n);
-  string get_momery();
+  void set_momery(string s, int n);
+  string get_momery(int adrs);
 };
 
 class Register
@@ -27,8 +27,8 @@ private:
   vector<string> regis;
 public: 
   Register();
-  void set_momery(vector<string> s, int n);
-  string get_momery();
+  void set_register(string s, int n);
+  string get_register(int adrs);
 };
 
 class CPU 
@@ -40,7 +40,7 @@ private:
   ALU alu; 
   CU cu; 
 public: 
-  void fetch(Memory);
+  void fetch(Memory&);
   vector <string> decode(); 
   void execute(Register&, Memory&, vector<string>); 
 };
@@ -61,7 +61,7 @@ class ALU
 public: 
   string hexToDes(string);
   string desToHex(string);
-  bool isEqual(int adrs, Register);
+  bool isEqual(int adrs, Register&);
   bool isValid(string); 
   void add(int adrs1, int adrs2, int adrs3, Register&);
 };
