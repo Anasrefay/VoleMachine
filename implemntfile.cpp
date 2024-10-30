@@ -50,7 +50,7 @@ void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
   }
   else if (instruction[0] == "2")
   {
-    cu.load(stoi(alu.hexToDes(instruction[1])),stoi(alu.hexToDes(instruction[2])), regist);
+    cu.load(stoi(alu.hexToDes(instruction[1])),instruction[2], regist);
   }
   else if (instruction[0] == "3" && instruction[2] != "00")
   {

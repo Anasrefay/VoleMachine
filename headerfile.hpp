@@ -49,7 +49,7 @@ class CU
 {
 public: 
   void load(int regAd, int memAd, Register&, Memory&);
-  void load(int regAd, int val, Register&);
+  void load(int regAd, string val, Register&);
   void store(int regAd, int memAd, Register&, Memory&);
   void move(int regAd1, int regAd2, Register&);
   void jump(int regAd, Register, int& pc);
