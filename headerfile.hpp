@@ -43,6 +43,7 @@ public:
   void fetch(Memory&);
   vector <string> decode(); 
   void execute(Register&, Memory&, vector<string>); 
+  int get_pc(); 
 };
 
 class CU 
@@ -63,5 +64,5 @@ public:
   string desToHex(string);
   bool isEqual(int adrs, Register&);
   bool isValid(string); 
-  void add(int adrs1, int adrs2, int adrs3, Register&);
+  void add(int adrs1, int adrs2, int adrs3, Register&, bool isfloat);
 };

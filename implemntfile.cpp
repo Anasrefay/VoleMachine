@@ -10,9 +10,14 @@ bool ALU::isEqual(int adrs, Register& regist)
     return false; 
 }
 
-void ALU::add(int adrs1, int adrs2, int adrs3, Register& regist)
+void ALU::add(int adrs1, int adrs2, int adrs3, Register& regist, bool isfloat = false)
 {
-//   regist.set_register(to_string(adrs2+adrs3),adrs1);
+  if (!isfloat)
+    regist.set_register(to_string(adrs2+adrs3),adrs1);
+  else 
+  {
+    //
+  }
 }
 
 bool ALU::isValid(string s)
@@ -40,6 +45,11 @@ string ALU::desToHex(string s)
   ss << hex << s;  
   string ans = ss.str();
   return ans; 
+}
+
+int CPU::get_pc()
+{
+  return programCounter; 
 }
 
 void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
