@@ -1,15 +1,17 @@
 #include <bits/stdc++.h>
 using namespace std; 
 
-class Machine 
+class Machine
 {
-private: 
-  CPU prossecor; 
-  Memory memory; 
-public: 
-  void loadProgramFile();
-  void outputState(); 
+    /*
+     * @ brief: The machine class manages all the program with their classes.
+     */
+public:
+    void loadProgramFile(vector<string> instructions , int pc , Memory& memory);
+    void outputMemory(Memory& memory);
+    void outputRegisters(Register& reg);
 };
+
 
 class Memory 
 {
@@ -46,15 +48,18 @@ public:
   int get_pc(); 
 };
 
-class CU 
+class CU
 {
-public: 
-  void load(int regAd, int memAd, Register&, Memory&);
-  void load(int regAd, string val, Register&);
-  void store(int regAd, int memAd, Register&, Memory&);
-  void move(int regAd1, int regAd2, Register&);
-  void jump(int regAd, Register, int& pc);
-  void halt();
+/*
+ * @brief : The class control unit controls the flow of the instructions.
+ */
+public:
+    void load(int regAd, int memAd, Register& reg, Memory& mem);
+    void load(int regAd, string val, Register&reg);
+    void store(int regAd, int memAd, Register& reg, Memory& mem);
+    void move(int regAd1, int regAd2, Register&reg);
+    void jump(int regAd, Register&reg, int& pc , int&memAd);
+    void halt();
 };
 
 class ALU 
