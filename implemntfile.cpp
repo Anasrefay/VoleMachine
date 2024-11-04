@@ -86,13 +86,16 @@ bool ALU::isEqual(int adrs, Register& regist)
         return false;
 }
 
-void ALU::add(int adrs1, int adrs2, int adrs3, Register& regist, bool isfloat = false)
+void ALU::add(int adrs1, int adrs2, int adrs3, Register& regist, bool isfloat)
 {
   if (!isfloat)
     regist.set_register(to_string(adrs2+adrs3),adrs1);
   else 
   {
-    //
+    string num1 = regist.get_register(adrs2); 
+    string num2 = regist.get_register(adrs3);
+    float num3 = hexTofloat(num1) + hexTofloat(num2); 
+    regist.set_register(to_string(num3),adrs1); 
   }
 }
 
@@ -122,7 +125,6 @@ string ALU::desToHex(string s)
     string ans = ss.str();
     return ans;
 }
-using namespace std;
 int CPU::get_pc()
 {
     return programCounter;
@@ -200,4 +202,102 @@ void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
     }
     else if (instruction[0] == "C")
         cu.halt();
+}
+
+float hexTofloat(const string &hex)
+{
+    string hexUpper = hex;
+    transform(hexUpper.begin(), hexUpper.end(), hexUpper.begin(), ::toupper);
+
+    int decimalValue;
+    stringstream ss;
+    ss << hex << hexUpper;
+    ss >> decimalValue;
+
+    bitset<8> binary(decimalValue);
+
+    string binarynum = binary.to_string();
+
+    string binarynumExp = binarynum.substr(1, 3);
+    int decimalExp = stoi(binarynumExp, nullptr, 2);
+    decimalExp -= 4;
+    string mantisa = binarynum.substr(4);
+    int intmantisa = stoi(mantisa, nullptr, 2);
+    int sign = (binarynum[0] == '1') ? -1 : 1;
+    return intmantisa * pow(2, -4) * pow(2, decimalExp) * sign;
+}
+
+string floatToHex(float num, int precision = 4)
+{
+    bool isNegative = num < 0;
+    if (isNegative)
+    {
+        num = -num;
+    }
+
+    int integerPart = int(num);
+    float fractionalPart = num - integerPart;
+
+    string binaryInteger = "";
+    if (integerPart == 0)
+    {
+        binaryInteger = "0";
+    }
+    else
+    {
+        while (integerPart > 0)
+        {
+            binaryInteger = (integerPart % 2 == 0 ? "0" : "1") + binaryInteger;
+            integerPart /= 2;
+        }
+    }
+
+    string binaryFractional = ".";
+    while (precision-- > 0 && fractionalPart != 0.0f)
+    {
+        fractionalPart *= 2;
+        if (fractionalPart >= 1.0f)
+        {
+            binaryFractional += "1";
+            fractionalPart -= 1.0f;
+        }
+        else
+        {
+            binaryFractional += "0";
+        }
+    }
+
+    string binaryRepresentation = binaryInteger + binaryFractional;
+    while (binaryRepresentation.length() <= 4)
+        binaryRepresentation += "0";
+    int exp = binaryRepresentation.find('.');
+    string mantisa = "";
+    for (int i = 0; i < binaryRepresentation.length(); i++)
+    {
+        if (binaryRepresentation[i] == '.')
+            continue;
+        mantisa += binaryRepresentation[i];
+    }
+    exp += 4;
+    string expbinary = "";
+    if (exp == 0)
+    {
+        expbinary = "0";
+    }
+    else
+    {
+        while (exp > 0)
+        {
+            expbinary = (exp % 2 == 0 ? "0" : "1") + expbinary;
+            exp /= 2;
+        }
+    }
+    string ieee = ((isNegative) ? "1" : "0") + expbinary + mantisa;
+    bitset<8> bits(ieee);
+    unsigned int decimalValue = bits.to_ulong();
+
+    stringstream ss;
+    ss << hex << uppercase << decimalValue;
+
+    return ss.str();
 }

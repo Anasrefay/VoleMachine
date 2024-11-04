@@ -1,17 +1,7 @@
+#ifndef HEADERFILE_HPP
+#define HEADERFILE_HPP
 #include <bits/stdc++.h>
 using namespace std; 
-
-class Machine
-{
-    /*
-     * @ brief: The machine class manages all the program with their classes.
-     */
-public:
-    void loadProgramFile(vector<string> instructions , int pc , Memory& memory);
-    void outputMemory(Memory& memory);
-    void outputRegisters(Register& reg);
-};
-
 
 class Memory 
 {
@@ -31,21 +21,6 @@ public:
   Register();
   void set_register(string s, int n);
   string get_register(int adrs);
-};
-
-class CPU 
-{
-private: 
-  int programCounter;
-  string instructionRegister; 
-  Register regist;  
-  ALU alu; 
-  CU cu; 
-public: 
-  void fetch(Memory&);
-  vector <string> decode(); 
-  void execute(Register&, Memory&, vector<string>); 
-  int get_pc(); 
 };
 
 class CU
@@ -69,5 +44,36 @@ public:
   string desToHex(string);
   bool isEqual(int adrs, Register&);
   bool isValid(string); 
-  void add(int adrs1, int adrs2, int adrs3, Register&, bool isfloat);
+  void add(int adrs1, int adrs2, int adrs3, Register&, bool isfloat = false);
 };
+
+class CPU 
+{
+private: 
+  int programCounter;
+  string instructionRegister; 
+  Register regist;  
+  ALU alu; 
+  CU cu; 
+public: 
+  void fetch(Memory&);
+  vector <string> decode(); 
+  void execute(Register&, Memory&, vector<string>); 
+  int get_pc(); 
+};
+
+class Machine
+{
+    /*
+     * @ brief: The machine class manages all the program with their classes.
+     */
+public:
+    void loadProgramFile(vector<string> instructions , int pc , Memory& memory);
+    void outputMemory(Memory& memory);
+    void outputRegisters(Register& reg);
+};
+
+float hexTofloat(const string &hex);
+string floatToHex(float num, int precision = 4);
+
+#endif
