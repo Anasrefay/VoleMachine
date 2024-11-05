@@ -9,8 +9,8 @@ private:
   vector<string> bytes;
 public: 
   Memory(); 
-  void set_momery(string s, int n);
-  string get_momery(int adrs);
+  void set_memory(string s, int n);
+  string get_memory(int adrs);
 };
 
 class Register
@@ -40,10 +40,10 @@ public:
 class ALU 
 {
 public: 
-  string hexToDes(string);
-  string desToHex(string);
-  bool isEqual(int adrs, Register&);
-  bool isValid(string); 
+  static int hexToDes(string);
+  static string desToHex(string);
+  static bool isEqual(int adrs, Register&);
+  static bool isValid(string); 
   void add(int adrs1, int adrs2, int adrs3, Register&, bool isfloat = false);
 };
 
@@ -60,6 +60,8 @@ public:
   vector <string> decode(); 
   void execute(Register&, Memory&, vector<string>); 
   int get_pc(); 
+  void set_pc(string x); 
+  Register& returnRegister(); 
 };
 
 class Machine
@@ -68,6 +70,8 @@ class Machine
      * @ brief: The machine class manages all the program with their classes.
      */
 public:
+    CPU processor; 
+    Memory memory; 
     void loadProgramFile(vector<string> instructions , int pc , Memory& memory);
     void outputMemory(Memory& memory);
     void outputRegisters(Register& reg);
@@ -75,5 +79,7 @@ public:
 
 float hexTofloat(const string &hex);
 string floatToHex(float num, int precision = 4);
+void instLines(vector<string>& instructions);
+vector<string> GetFileInstructions(fstream& file);
 
 #endif

@@ -10,11 +10,11 @@ Memory::Memory() {
         bytes.push_back("00");
     }
 }
-string Memory::get_momery(int n) {
+string Memory::get_memory(int n) {
     return bytes[n];
 }
 
-void Memory::set_momery(string s, int n) {
+void Memory::set_memory(string s, int n) {
     bytes[n] = s;
 }
 
@@ -22,17 +22,32 @@ void Machine::loadProgramFile(vector<string> instructions , int pc , Memory& mem
     for(int i = pc; i < pc+instructions.size(); i+=2) {
         string first = instructions[i].substr(0, 2);
         string second = instructions[i].substr(2,2);
-        memory.set_momery(first , i);
-        memory.set_momery(second , i+1);
+        memory.set_memory(first , i);
+        memory.set_memory(second , i+1);
     }
 }
 void Machine::outputMemory(Memory& memory) {
-   for(int i = 0; i < 256; i++) {
-       if(i%16 == 0 ) {
-           cout << endl;
-       }
-       cout << memory.get_momery(i) << ' ';
-   }
+    cout<<"  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n";
+    map<int,char>mp;
+    mp[10] = 'A',mp[11] = 'B',mp[12] = 'C',mp[13] = 'D',mp[14] = 'E',mp[15] = 'F';
+    for(int i = 0; i < 16; i++) {
+        if(i > 9){
+            cout<<mp[i]<<' ';
+            for (int j = 0; j < 16; j++)
+            {
+                cout << memory.get_memory(i*16+j) << ' ';
+            }
+            cout<<'\n';
+        }
+        else{
+            cout<<i<<' ';
+            for (int j = 0; j < 16; j++)
+            {
+                cout << memory.get_memory(i*16+j) << ' ';
+            }
+            cout<<'\n';
+        }
+    }
     cout << endl;
 }
 void Machine::outputRegisters(Register &reg) {
@@ -42,7 +57,7 @@ void Machine::outputRegisters(Register &reg) {
     cout << endl;
 }
 void CU::load(int regAd, int memAd, Register & reg, Memory &mem) {
-    string memContent = mem.get_momery(memAd);
+    string memContent = mem.get_memory(memAd);
     reg.set_register(memContent , regAd);
 }
 
@@ -54,13 +69,13 @@ void CU::load(int regAd, string val, Register &reg) {
 
 void CU::store(int regAd, int memAd, Register& reg, Memory& mem) {
     string regContent = reg.get_register(regAd);
-    mem.set_momery(regContent , regAd);
+    mem.set_memory(regContent , memAd);
 }
 
 
 void CU::move(int regAd1, int regAd2, Register & reg) {
-    string copyFromAddress2 = reg.get_register(regAd1);
-    reg.set_register(copyFromAddress2, regAd2);
+    string copyFromAddress1 = reg.get_register(regAd1);
+    reg.set_register(copyFromAddress1, regAd2);
     reg.set_register("00", regAd1);
 }
 
@@ -112,10 +127,10 @@ bool ALU::isValid(string s)
     return true;
 }
 
-string ALU::hexToDes(string s)
+int ALU::hexToDes(string s)
 {
     int ans = stoi(s, nullptr, 16);
-    return to_string(ans);
+    return ans;
 }
 
 string ALU::desToHex(string s)
@@ -129,8 +144,19 @@ int CPU::get_pc()
 {
     return programCounter;
 }
+
+void CPU::set_pc(string x)
+{
+  programCounter = ALU::hexToDes(x); 
+}
+
+Register& CPU::returnRegister()
+{
+  return regist; 
+} 
+
 void CPU::fetch(Memory &memo) {
-    instructionRegister = memo.get_momery(programCounter)+memo.get_momery(programCounter+1);
+    instructionRegister = memo.get_memory(programCounter)+memo.get_memory(programCounter+1);
     programCounter+=2;
 }
 vector<string> CPU::decode() {
@@ -148,9 +174,51 @@ vector<string> CPU::decode() {
         instructions.push_back(to_string(instructionRegister[3]));
     }
     else if(save == "C"){
-
+        instructions.push_back(save);
+        instructions.push_back("000");
     }
+
     return instructions;
+}
+
+void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
+{
+    if (instruction[0] == "1")
+    {
+        cu.load(ALU::hexToDes(instruction[1]),ALU::hexToDes(instruction[2]), regist, memory);
+    }
+    else if (instruction[0] == "2")
+    {
+        cu.load(ALU::hexToDes(instruction[1]),instruction[2], regist);
+    }
+    else if (instruction[0] == "3" && instruction[2] != "00")
+    {
+        cu.store(ALU::hexToDes(instruction[1]),ALU::hexToDes(instruction[2]), regist, memory);
+    }
+    else if (instruction[0] == "3" && instruction[2] == "00")
+    {
+        cout << regist.get_register(ALU::hexToDes(instruction[1]));
+        cu.store(ALU::hexToDes(instruction[1]),ALU::hexToDes(instruction[2]), regist, memory);
+    }
+    else if (instruction[0] == "4")
+    {
+        cu.move(ALU::hexToDes(instruction[2]), ALU::hexToDes(instruction[3]), regist);
+    }
+    else if (instruction[0] == "5")
+    {
+        alu.add(ALU::hexToDes(instruction[1]), ALU::hexToDes(instruction[2]), ALU::hexToDes(instruction[3]), regist);
+    }
+    else if (instruction[0] == "6")
+    {
+        alu.add(ALU::hexToDes(instruction[1]), ALU::hexToDes(instruction[2]), ALU::hexToDes(instruction[3]), regist, true);
+    }
+    else if (instruction[0] == "B")
+    {
+        if (ALU::isEqual(ALU::hexToDes(instruction[1]), regist))
+            programCounter = ALU::hexToDes(instruction[2]);
+    }
+    else if (instruction[0] == "C")
+        cu.halt();
 }
 
 Register:: Register() {
@@ -164,44 +232,6 @@ void Register :: set_register(string s, int n) {
 }
 string Register :: get_register(int n ) {
     return regis[n];
-}
-void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
-{
-    if (instruction[0] == "1")
-    {
-        cu.load(stoi(alu.hexToDes(instruction[1])),stoi(alu.hexToDes(instruction[2])), regist, memory);
-    }
-    else if (instruction[0] == "2")
-    {
-        cu.load(stoi(alu.hexToDes(instruction[1])),instruction[2], regist);
-    }
-    else if (instruction[0] == "3" && instruction[2] != "00")
-    {
-        cu.store(stoi(alu.hexToDes(instruction[1])),stoi(alu.hexToDes(instruction[2])), regist, memory);
-    }
-    else if (instruction[0] == "3" && instruction[2] == "00")
-    {
-        cout << regist.get_register(stoi(alu.hexToDes(instruction[1])));
-    }
-    else if (instruction[0] == "4")
-    {
-        cu.move(stoi(alu.hexToDes(instruction[2])), stoi(alu.hexToDes(instruction[3])), regist);
-    }
-    else if (instruction[0] == "5")
-    {
-        alu.add(stoi(alu.hexToDes(instruction[1])), stoi(alu.hexToDes(instruction[2])), stoi(alu.hexToDes(instruction[3])), regist);
-    }
-    else if (instruction[0] == "6")
-    {
-        alu.add(stoi(alu.hexToDes(instruction[1])), stoi(alu.hexToDes(instruction[2])), stoi(alu.hexToDes(instruction[3])), regist);
-    }
-    else if (instruction[0] == "B")
-    {
-        if (alu.isEqual(stoi(alu.hexToDes(instruction[1])), regist))
-            programCounter = stoi(alu.hexToDes(instruction[2]));
-    }
-    else if (instruction[0] == "C")
-        cu.halt();
 }
 
 float hexTofloat(const string &hex)
@@ -227,7 +257,7 @@ float hexTofloat(const string &hex)
     return intmantisa * pow(2, -4) * pow(2, decimalExp) * sign;
 }
 
-string floatToHex(float num, int precision = 4)
+string floatToHex(float num, int precision)
 {
     bool isNegative = num < 0;
     if (isNegative)
@@ -300,4 +330,33 @@ string floatToHex(float num, int precision = 4)
     ss << hex << uppercase << decimalValue;
 
     return ss.str();
+}
+
+void instLines(vector<string>& instructions) {
+    cout << "please start entering the instructions " << endl;
+    string instructionLine;
+    while (true) {
+        if(instructionLine == "C000") {
+            break;
+        }
+        cin >> instructionLine;
+        instructions.push_back(instructionLine);
+    }
+}
+
+vector<string> GetFileInstructions(fstream& file)
+{
+
+    vector<string>instruct;
+    while (!file.eof())
+    {
+        string x;
+        file >> x;
+        instruct.push_back(x);
+    }
+    for (int i = 0; i < instruct.size(); i++)
+    {
+        cout<<instruct[i]<<'\n';
+    }
+    return instruct;
 }
