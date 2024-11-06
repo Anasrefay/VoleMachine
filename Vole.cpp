@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "headerfile.hpp"
+#include "Vole.hpp"
 using namespace std;
 
 
@@ -19,9 +19,9 @@ void Memory::set_memory(string s, int n) {
 }
 
 void Machine::loadProgramFile(vector<string> instructions , int pc , Memory& memory) {
-    for(int i = pc; i < pc+instructions.size(); i+=2) {
-        string first = instructions[i].substr(0, 2);
-        string second = instructions[i].substr(2,2);
+    for(int i = pc, j = 0; j < instructions.size(); i+=2, j++) {
+        string first = instructions[j].substr(0, 2);
+        string second = instructions[j].substr(2,2);
         memory.set_memory(first , i);
         memory.set_memory(second , i+1);
     }
@@ -51,8 +51,14 @@ void Machine::outputMemory(Memory& memory) {
     cout << endl;
 }
 void Machine::outputRegisters(Register &reg) {
-    for(int i =0 ; i< 16; i++) {
-        cout << reg.get_register(i)<< endl;
+    map<int, char> mp;
+    mp[10] = 'A', mp[11] = 'B', mp[12] = 'C', mp[13] = 'D', mp[14] = 'E', mp[15] = 'F';
+    for (int i = 0; i < 16; i++)
+    {
+        if (i > 9)
+            cout << "R" << mp[i] << " " << reg.get_register(i) << endl;
+        else
+            cout << "R" << i << " " << reg.get_register(i) << endl;
     }
     cout << endl;
 }
@@ -104,13 +110,20 @@ bool ALU::isEqual(int adrs, Register& regist)
 void ALU::add(int adrs1, int adrs2, int adrs3, Register& regist, bool isfloat)
 {
   if (!isfloat)
-    regist.set_register(to_string(adrs2+adrs3),adrs1);
+  {
+    int val1 = hexToDes(regist.get_register(adrs2)); 
+    int val2 = hexToDes(regist.get_register(adrs3));
+    int ans = val1 + val2;  
+    string s = to_string(ans); 
+
+    regist.set_register(desToHex(s),adrs1);
+  }
   else 
   {
     string num1 = regist.get_register(adrs2); 
     string num2 = regist.get_register(adrs3);
     float num3 = hexTofloat(num1) + hexTofloat(num2); 
-    regist.set_register(to_string(num3),adrs1); 
+    regist.set_register(floatToHex(num3),adrs1); 
   }
 }
 
@@ -136,12 +149,22 @@ int ALU::hexToDes(string s)
 string ALU::desToHex(string s)
 {
     stringstream ss;
-    ss << hex << s;
+    int decimal = stoi(s); 
+    bitset <8> bit_num(decimal);
+    unsigned num = bit_num.to_ulong();
+    ss << hex << num;
     string ans = ss.str();
+    if (ans.length() == 1) ans = '0' + ans; 
+    for(char &c : ans){
+        c = toupper(c);}
     return ans;
 }
+/*2105
+3104
+5211
+C000*/
 int CPU::get_pc()
-{
+{ 
     return programCounter;
 }
 
@@ -155,30 +178,34 @@ Register& CPU::returnRegister()
   return regist; 
 } 
 
-void CPU::fetch(Memory &memo) {
+string CPU::fetch(Memory &memo) {
     instructionRegister = memo.get_memory(programCounter)+memo.get_memory(programCounter+1);
     programCounter+=2;
+    return instructionRegister;
 }
-vector<string> CPU::decode() {
-    string save = to_string(instructionRegister[0]);
-    vector<string>instructions;
-    if(save == "1" || save == "2" || save == "B" || save == "3"){
-        instructions.push_back(save);
-        instructions.push_back(to_string(instructionRegister[1]));
-        instructions.push_back(instructionRegister.substr(2,2));
-    }
-    else if(save == "4" || save == "5" || save == "6"){
-        instructions.push_back(save);
-        instructions.push_back(to_string(instructionRegister[1]));
-        instructions.push_back(to_string(instructionRegister[2]));
-        instructions.push_back(to_string(instructionRegister[3]));
-    }
-    else if(save == "C"){
-        instructions.push_back(save);
-        instructions.push_back("000");
-    }
 
-    return instructions;
+vector<string> CPU::decode(string s)
+{
+    vector<string> save;
+    if (s[0] == '1' || s[0] == '2' || s[0] == 'B' || s[0] == '3')
+    {
+        save.push_back(s.substr(0,1));
+        save.push_back(s.substr(1,1));
+        save.push_back(s.substr(2,2));
+    }
+    else if (s[0] == '4' || s[0] == '5' || s[0] == '6')
+    {
+        save.push_back(s.substr(0,1));
+        save.push_back(s.substr(1,1));
+        save.push_back(s.substr(2,1));
+        save.push_back(s.substr(3,1));
+    }
+    else if (s[0] == 'C')
+    {
+        save.push_back("C");
+        save.push_back("000");
+    }
+    return save;
 }
 
 void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
@@ -197,7 +224,6 @@ void CPU::execute(Register& regist, Memory& memory, vector<string> instruction)
     }
     else if (instruction[0] == "3" && instruction[2] == "00")
     {
-        cout << regist.get_register(ALU::hexToDes(instruction[1]));
         cu.store(ALU::hexToDes(instruction[1]),ALU::hexToDes(instruction[2]), regist, memory);
     }
     else if (instruction[0] == "4")
@@ -239,10 +265,7 @@ float hexTofloat(const string &hex)
     string hexUpper = hex;
     transform(hexUpper.begin(), hexUpper.end(), hexUpper.begin(), ::toupper);
 
-    int decimalValue;
-    stringstream ss;
-    ss << hex << hexUpper;
-    ss >> decimalValue;
+    unsigned int decimalValue = stoul(hex, nullptr, 16);
 
     bitset<8> binary(decimalValue);
 
@@ -300,7 +323,7 @@ string floatToHex(float num, int precision)
     string binaryRepresentation = binaryInteger + binaryFractional;
     while (binaryRepresentation.length() <= 4)
         binaryRepresentation += "0";
-    int exp = binaryRepresentation.find('.');
+    int exp = binaryRepresentation.find('.'); 
     string mantisa = "";
     for (int i = 0; i < binaryRepresentation.length(); i++)
     {
@@ -353,10 +376,6 @@ vector<string> GetFileInstructions(fstream& file)
         string x;
         file >> x;
         instruct.push_back(x);
-    }
-    for (int i = 0; i < instruct.size(); i++)
-    {
-        cout<<instruct[i]<<'\n';
     }
     return instruct;
 }
